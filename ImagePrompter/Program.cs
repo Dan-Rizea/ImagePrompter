@@ -1,10 +1,21 @@
 using ImagePrompter.Components;
+using Microsoft.EntityFrameworkCore;
+using Persistence;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-builder.Services.AddRazorComponents()
-    .AddInteractiveServerComponents();
+builder.Services.AddRazorComponents().AddInteractiveServerComponents();
+
+// Add persistence
+builder.Services.AddPersistenceServices(options => options.ConnectionString = builder.Configuration.GetConnectionString("DefaultConnection")!);
+
+//builder.Services.AddDbContext<ApplicationDbContext>(options =>
+//{
+//    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
+//});
+
+
 
 var app = builder.Build();
 
