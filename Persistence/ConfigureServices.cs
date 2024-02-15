@@ -13,6 +13,7 @@ namespace Persistence
             var migrationsAssembly = typeof(ApplicationDbContext).Assembly.FullName;
             services.AddDbContext<ApplicationDbContext>(options =>
                options.UseSqlServer(providedOptions.ConnectionString, builder => builder.MigrationsAssembly(migrationsAssembly)));
+
             return services;
         }
     }

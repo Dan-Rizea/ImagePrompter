@@ -1,4 +1,4 @@
-﻿@page "/session"
+﻿@page "/sessions/{SessionId:guid}/{VersionName}"
 @attribute [StreamRendering]
 
 <PageTitle>Session</PageTitle>
@@ -23,5 +23,14 @@
 </div>
 
 @code {
+    [Parameter]
+    public Guid SessionId { get; set; } = Guid.NewGuid();
+    [Parameter]
+    public string VersionName { get; set; } = "v1";
 
+    public void OnInitialization()
+    {
+        if (SessionId == null) SessionId = Guid.NewGuid();
+        if (VersionName == null) VersionName = Guid.NewGuid().ToString();
+    }
 }

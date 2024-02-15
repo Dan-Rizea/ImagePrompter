@@ -4,8 +4,13 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 VisualStudioVersion = 17.8.34601.278
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ImagePrompter", "ImagePrompter\ImagePrompter.csproj", "{C05EE14E-E656-4B72-BCA5-784E6CD04E0E}"
+	ProjectSection(ProjectDependencies) = postProject
+		{5A39B108-FFAD-41A0-82F3-143D6B291052} = {5A39B108-FFAD-41A0-82F3-143D6B291052}
+	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Persistence", "Persistence\Persistence.csproj", "{2B50A2FA-6669-4BFC-8297-22059B98408B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Persistence", "Persistence\Persistence.csproj", "{2B50A2FA-6669-4BFC-8297-22059B98408B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Application", "Application\Application.csproj", "{5A39B108-FFAD-41A0-82F3-143D6B291052}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,6 +26,10 @@ Global
 		{2B50A2FA-6669-4BFC-8297-22059B98408B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2B50A2FA-6669-4BFC-8297-22059B98408B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2B50A2FA-6669-4BFC-8297-22059B98408B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5A39B108-FFAD-41A0-82F3-143D6B291052}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5A39B108-FFAD-41A0-82F3-143D6B291052}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5A39B108-FFAD-41A0-82F3-143D6B291052}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5A39B108-FFAD-41A0-82F3-143D6B291052}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
