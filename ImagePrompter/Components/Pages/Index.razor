@@ -2,6 +2,7 @@
 @using Microsoft.EntityFrameworkCore.Metadata.Internal
 
 @inject ISessionLogicService _sessionLogicService;
+@inject SessionDataService _sessionDataService;
 
 @code {
     /// <summary>
@@ -10,6 +11,8 @@
     /// <returns></returns>
     protected override async Task OnInitializedAsync()
     {
-        await _sessionLogicService.InitializeSessionAsync();        
+        var initializedSession = await _sessionLogicService.InitializeSessionAsync();
+        _sessionDataService.CurrentSession = initializedSession; 
+        _sessionDataService.CurrentSessionVersionName = initializedSession.SessionVersions.FirstOrDefault()!.Name;
     }
 }

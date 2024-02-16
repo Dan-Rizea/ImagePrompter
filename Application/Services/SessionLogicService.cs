@@ -16,7 +16,7 @@ namespace ImagePrompter.Components.Logic
             _navigationManager = navigationManager;
         }
 
-        public async Task InitializeSessionAsync()
+        public async Task<Session> InitializeSessionAsync()
         {
             var newSessionVersion = new SessionVersion()
             {
@@ -35,6 +35,8 @@ namespace ImagePrompter.Components.Logic
             await _sessionRepository.CreateAsync(newSession);
 
             _navigationManager.NavigateTo($"/{newSession.SessionId}/{newSessionVersion.Name}");
+
+            return newSession;
         }
 
         private static async Task<byte[]> GetTemplateImageAsync()

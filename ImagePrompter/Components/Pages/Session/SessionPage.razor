@@ -3,6 +3,7 @@
 @attribute [StreamRendering]
 
 @inject NavigationManager _navigationManager;
+@inject SessionDataService _sessionDataService;
 @inject ISessionRepository _sessionRepository;
 @inject ISessionLogicService _sessionLogicService;
 
@@ -14,12 +15,10 @@
 
 <PageTitle>Session</PageTitle>
 
-<h3>Session</h3>
-
 <div class="container pt-5">
     <div class="row justify-content-center">
         <div class="col-md-8">
-            @if(CurrentSession is null)
+            @if (_sessionDataService.CurrentSession is null)
             {
                 <div id="spinner"></div>
             }
@@ -31,7 +30,7 @@
             }
             <div class="mb-3">
                 <label for="exampleFormControlTextarea1" class="form-label">Example textarea</label>
-                <textarea class="form-control" id="exampleFormControlTextarea1" rows="3"></textarea>
+                <textarea class="form-control" id="exampleFormControlTextarea1" @onkeydown="@Prompt" rows="3"></textarea>
             </div>
         </div>
     </div>
@@ -43,12 +42,14 @@
     [Parameter]
     public string VersionName { get; set; }
 
-    private static Session CurrentSession { get; set; }
-
     protected override async Task OnInitializedAsync()
     {
         var initialSession = await _sessionRepository.GetBySessionIdVersionNameAsync(SessionId, VersionName);
-        if (initialSession != null) CurrentSession = initialSession; 
+        if (initialSession != null)
+        {
+            _sessionDataService.CurrentSession = initialSession;
+            _sessionDataService.CurrentSessionVersionName = initialSession.SessionVersions.Where(sv => sv.Name == VersionName).SingleOrDefault().Name;
+        }
         else
         {
             var session = await _sessionRepository.GetBySessionIdAsync(SessionId);
@@ -66,8 +67,21 @@
 
     private string GetImage()
     {
-        var currentVersion = CurrentSession.SessionVersions.Where(s => s.Name == VersionName).SingleOrDefault();
+        var currentVersion = _sessionDataService.CurrentSession.SessionVersions.Where(s => s.Name == VersionName).SingleOrDefault();
 
         return Convert.ToBase64String(currentVersion.Image);
+    }
+
+    private async Task Prompt(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            await SendRequestAsync();
+        }
+    }
+
+    private async Task SendRequestAsync()
+    {
+        var response = await httpClient.PostAsync("your-api-endpoint", new StringContent(text, Encoding.UTF8, "application/json"));
     }
 }
