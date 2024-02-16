@@ -37,6 +37,7 @@ public class SessionRepository : ISessionRepository
     public async Task<Session?> GetBySessionIdAsync(Guid sessionId)
     {
         return await _context.Sessions
+            .Include(s => s.SessionVersions)
             .Where(s => s.SessionId == sessionId)
             .SingleOrDefaultAsync();
     }
@@ -45,13 +46,13 @@ public class SessionRepository : ISessionRepository
     /// Gets a session by its Id and by its version Id
     /// </summary>
     /// <param name="sessionId"></param>
-    /// <param name="versionId"></param>
+    /// <param name="versionName"></param>
     /// <returns></returns>
-    public async Task<Session?> GetBySessionAndVersionIdAsync(Guid sessionId, int versionId)
+    public async Task<Session?> GetBySessionIdVersionNameAsync(Guid sessionId, string versionName)
     {
         return await _context.Sessions
-            .Where(s => s.SessionId == sessionId) 
-            .Where(s => s.SessionVersionId == versionId)
+            .Include(s => s.SessionVersions)
+            .Where(s => s.SessionId == sessionId)
             .SingleOrDefaultAsync();
     }
 }

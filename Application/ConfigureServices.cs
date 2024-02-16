@@ -1,5 +1,7 @@
 ﻿using Application.Interfaces;
 using Application.Repositories;
+using Application.Services;
+using ImagePrompter.Components.Logic;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Application
@@ -10,6 +12,7 @@ namespace Application
         {
             services.AddTransient<ISessionRepository, SessionRepository>();
             services.AddTransient<ISessionVersionRepository, SessionVersionRepository>();
+            services.AddTransient<ISessionLogicService, SessionLogicService>();
 
             return services;
         }

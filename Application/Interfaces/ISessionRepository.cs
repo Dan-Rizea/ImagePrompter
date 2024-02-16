@@ -6,6 +6,6 @@ namespace Application.Interfaces
     {
         public Task<Session> CreateAsync(Session session);
         public Task<Session?> GetBySessionIdAsync(Guid sessionId);
-        public Task<Session?> GetBySessionAndVersionIdAsync(Guid sessionId, int versionId);
+        public Task<Session?> GetBySessionIdVersionNameAsync(Guid sessionId, string versionName);
     }
 }

@@ -1,0 +1,15 @@
+﻿@page "/"
+@using Microsoft.EntityFrameworkCore.Metadata.Internal
+
+@inject ISessionLogicService _sessionLogicService;
+
+@code {
+    /// <summary>
+    /// Create a new session and navigate to it.
+    /// </summary>
+    /// <returns></returns>
+    protected override async Task OnInitializedAsync()
+    {
+        await _sessionLogicService.InitializeSessionAsync();        
+    }
+}

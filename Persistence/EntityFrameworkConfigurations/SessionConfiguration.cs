@@ -13,7 +13,6 @@ namespace Persistence.EntityFrameworkConfigurations
 
             builder.Property(e => e.SessionId).IsRequired();
 
-            builder.HasIndex(e => e.SessionVersionId).IsUnique(false);
             builder.HasMany(e => e.SessionVersions).WithOne(e => e.Session);
 
             builder.HasIndex(e => e.DeletedAt).IsUnique(false);

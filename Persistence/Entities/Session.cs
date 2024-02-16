@@ -8,7 +8,6 @@
         public int Id { get; set; }
         public Guid SessionId { get; set; }
 
-        public int SessionVersionId { get; set; }
         public IEnumerable<SessionVersion> SessionVersions { get; set; }
     }
 }

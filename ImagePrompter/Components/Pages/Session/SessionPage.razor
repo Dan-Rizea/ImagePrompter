@@ -1,0 +1,73 @@
+﻿@page "/{SessionId:guid}/{VersionName}"
+
+@attribute [StreamRendering]
+
+@inject NavigationManager _navigationManager;
+@inject ISessionRepository _sessionRepository;
+@inject ISessionLogicService _sessionLogicService;
+
+<style>
+    body {
+        background-color: #1E1F26;
+    }
+</style>
+
+<PageTitle>Session</PageTitle>
+
+<h3>Session</h3>
+
+<div class="container pt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            @if(CurrentSession is null)
+            {
+                <div id="spinner"></div>
+            }
+            else
+            {
+                <div class="image-container mt-5">
+                    <img src="data:image/png;base64,@GetImage()" alt="Blank canvas" class="img-fluid img-thumbnail"/>
+                </div>
+            }
+            <div class="mb-3">
+                <label for="exampleFormControlTextarea1" class="form-label">Example textarea</label>
+                <textarea class="form-control" id="exampleFormControlTextarea1" rows="3"></textarea>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public Guid SessionId { get; set; }
+    [Parameter]
+    public string VersionName { get; set; }
+
+    private static Session CurrentSession { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var initialSession = await _sessionRepository.GetBySessionIdVersionNameAsync(SessionId, VersionName);
+        if (initialSession != null) CurrentSession = initialSession; 
+        else
+        {
+            var session = await _sessionRepository.GetBySessionIdAsync(SessionId);
+            if (session != null)
+            {
+                var firstSessionVersion = session.SessionVersions.FirstOrDefault();
+                if (firstSessionVersion != null)
+                {
+                    _navigationManager.NavigateTo($"/{session.SessionId}/{firstSessionVersion}");
+                }
+            }
+            else await _sessionLogicService.InitializeSessionAsync(); 
+        }
+    }
+
+    private string GetImage()
+    {
+        var currentVersion = CurrentSession.SessionVersions.Where(s => s.Name == VersionName).SingleOrDefault();
+
+        return Convert.ToBase64String(currentVersion.Image);
+    }
+}

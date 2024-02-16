@@ -1,13 +1,30 @@
 ﻿@inherits LayoutComponentBase
 
-<div class="page">
-    <div class="sidebar">
-        <NavMenu />
-    </div>
+@rendermode InteractiveServer
 
+@inject ISessionLogicService _sessionLogicService;
+
+<style>
+    #navbar {
+        background-color: #283655;
+    }
+</style>
+
+<div class="page">
     <main>
-        <div class="top-row px-4">
-            <a href="https://learn.microsoft.com/aspnet/core/" target="_blank">About</a>
+        <div id = "navbar" class="top-row px-4">
+            @* <button @onclick="() => _sessionLogicService.InitializeSessionAsync()">New Session</button> *@
+            <button @onclick="GenerateNewSession">New Session</button>
+            <div class="dropdown">
+                <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    Dropdown button
+                </button>
+                <ul class="dropdown-menu">
+                    <li><a class="dropdown-item" href="#">Action</a></li>
+                    <li><a class="dropdown-item" href="#">Another action</a></li>
+                    <li><a class="dropdown-item" href="#">Something else here</a></li>
+                </ul>
+            </div>
         </div>
 
         <article class="content px-4">
@@ -21,3 +38,22 @@
     <a href="" class="reload">Reload</a>
     <a class="dismiss">🗙</a>
 </div>
+
+@code {
+    private bool isActive = false;
+
+    private void Show()
+    {
+        isActive = true;
+    }
+
+    private void Hide()
+    {
+        isActive = false;
+    }
+
+    public async Task GenerateNewSession()
+    {
+        await _sessionLogicService.InitializeSessionAsync();
+    }
+}
