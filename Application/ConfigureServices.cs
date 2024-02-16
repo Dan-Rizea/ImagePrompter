@@ -13,6 +13,7 @@ namespace Application
             services.AddTransient<ISessionRepository, SessionRepository>();
             services.AddTransient<ISessionVersionRepository, SessionVersionRepository>();
             services.AddTransient<ISessionLogicService, SessionLogicService>();
+            services.AddTransient<ILLMServices, LLMServices>();
             services.AddScoped<SessionDataService>();
 
             return services;
