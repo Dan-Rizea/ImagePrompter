@@ -3,6 +3,7 @@ using Application.Models;
 using Application.Services.Mailing;
 using Application.Services.SessionData;
 using Microsoft.Extensions.Configuration;
+using Microsoft.JSInterop;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System.Text;
@@ -39,7 +40,7 @@ namespace Application.Services.LLM
                 case PromptType.EditImage:
                     return await EditImageAsync(prompt);
                 case PromptType.DownloadImage:
-                    return await DownloadImageAsync(prompt);
+                    return promptType.ToString();
                 case PromptType.ResizeImage:
                     return await ResizeImageAsync(prompt);
                 case PromptType.DescribeImage:
@@ -86,11 +87,6 @@ namespace Application.Services.LLM
         }
 
         private async Task<string> ResizeImageAsync(string prompt)
-        {
-            throw new NotImplementedException();
-        }
-
-        private async Task<string> DownloadImageAsync(string prompt)
         {
             throw new NotImplementedException();
         }

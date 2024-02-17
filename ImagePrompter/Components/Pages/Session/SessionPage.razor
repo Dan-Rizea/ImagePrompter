@@ -2,6 +2,7 @@
 
 @attribute [StreamRendering]
 
+@inject IJSRuntime _jsRuntime;
 @inject NavigationManager _navigationManager;
 @inject ISessionDataService _sessionDataService;
 @inject ISessionRepository _sessionRepository;
@@ -36,6 +37,18 @@
         </div>
     </div>
 </div>
+
+<script>
+    function downloadFile(fileName, content) {
+        const blob = new Blob([content], { type: 'application/octet-stream' });
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = fileName;
+        link.click();
+        window.URL.revokeObjectURL(url); // Cleanup
+    }
+</script>
 
 @code {
     [Parameter]
@@ -80,7 +93,8 @@
     {
         if (e.Key == "Enter")
         {
-            await _llmServices.PromptAsync(Prompt);
+            var promptingOutput = await _llmServices.PromptAsync(Prompt);
+            if (promptingOutput == "DownloadImage") await _jsRuntime.InvokeVoidAsync("downloadFile", "output.png", _sessionDataService.CurrentSessionVersion.Image);
         }
     }
 }
