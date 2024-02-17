@@ -3,9 +3,10 @@
 @attribute [StreamRendering]
 
 @inject NavigationManager _navigationManager;
-@inject SessionDataService _sessionDataService;
+@inject ISessionDataService _sessionDataService;
 @inject ISessionRepository _sessionRepository;
 @inject ISessionLogicService _sessionLogicService;
+@inject ILLMServices _llmServices;
 
 <style>
     body {
@@ -29,8 +30,8 @@
                 </div>
             }
             <div class="mb-3">
-                <label for="exampleFormControlTextarea1" class="form-label">Example textarea</label>
-                <textarea class="form-control" id="exampleFormControlTextarea1" @onkeydown="@Prompt" rows="3"></textarea>
+                <label for="exampleFormControlTextarea1" class="form-label">Prompt area</label>
+                <textarea class="form-control" id="exampleFormControlTextarea1" @bind="Prompt" @bind:event="oninput" @onkeydown="@HandleEnter" rows="3"></textarea>
             </div>
         </div>
     </div>
@@ -42,13 +43,16 @@
     [Parameter]
     public string VersionName { get; set; }
 
+    public string Prompt { get; set; } = string.Empty;
+
     protected override async Task OnInitializedAsync()
     {
         var initialSession = await _sessionRepository.GetBySessionIdVersionNameAsync(SessionId, VersionName);
         if (initialSession != null)
         {
             _sessionDataService.CurrentSession = initialSession;
-            _sessionDataService.CurrentSessionVersionName = initialSession.SessionVersions.Where(sv => sv.Name == VersionName).SingleOrDefault().Name;
+            _sessionDataService.CurrentSessionVersion = initialSession.SessionVersions.Where(sv => sv.Name == VersionName).SingleOrDefault() 
+                ?? throw new NullReferenceException("No session version could be found");
         }
         else
         {
@@ -67,21 +71,16 @@
 
     private string GetImage()
     {
-        var currentVersion = _sessionDataService.CurrentSession.SessionVersions.Where(s => s.Name == VersionName).SingleOrDefault();
+        var currentVersion = _sessionDataService.CurrentSessionVersion.Image;
 
-        return Convert.ToBase64String(currentVersion.Image);
+        return Convert.ToBase64String(currentVersion);
     }
 
-    private async Task Prompt(KeyboardEventArgs e)
+    private async Task HandleEnter(KeyboardEventArgs e)
     {
         if (e.Key == "Enter")
         {
-            await SendRequestAsync();
+            await _llmServices.PromptAsync(Prompt);
         }
-    }
-
-    private async Task SendRequestAsync()
-    {
-        var response = await httpClient.PostAsync("your-api-endpoint", new StringContent(text, Encoding.UTF8, "application/json"));
     }
 }

@@ -1,9 +1,8 @@
 ﻿using Application.Interfaces;
-using Application.Services;
 using Microsoft.AspNetCore.Components;
 using Persistence.Entities;
 
-namespace ImagePrompter.Components.Logic
+namespace Application.Services.SessionLogic
 {
     public class SessionLogicService : ISessionLogicService
     {

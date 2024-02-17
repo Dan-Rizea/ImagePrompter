@@ -1,6 +1,6 @@
 ﻿using Persistence.Entities;
 
-namespace Application.Services
+namespace Application.Services.SessionLogic
 {
     public interface ISessionLogicService
     {

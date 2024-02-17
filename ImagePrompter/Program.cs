@@ -32,3 +32,7 @@ app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 
 app.Run();
+
+//TODO: Refactor constructors into primary constructors.
+//TODO: Treat all warnings and, consequently, all null values
+//TODO: Add exception filtering

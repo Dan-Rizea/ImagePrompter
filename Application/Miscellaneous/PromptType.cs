@@ -9,7 +9,6 @@
         ResizeImage = 4,
         DescribeImage = 5,
         EmailImage = 6,
-        AnimateImage = 7,
-        Error = 8,
+        Error = 7,
     }
 }

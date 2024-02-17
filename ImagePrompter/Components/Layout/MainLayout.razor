@@ -2,7 +2,7 @@
 
 @rendermode InteractiveServer
 
-@inject SessionDataService _sessionDataService;
+@inject ISessionDataService _sessionDataService;
 @inject ISessionLogicService _sessionLogicService;
 
 <style>
@@ -30,10 +30,10 @@
             <button class="btn btn-secondary" type="button" aria-expanded="false" @onclick="() => _sessionLogicService.InitializeSessionAsync()">New Session</button>
             <div class="dropdown">
                 <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                    @_sessionDataService.CurrentSessionVersionName
+                    @_sessionDataService.CurrentSessionVersion.Name
                 </button>
                 <ul class="dropdown-menu">
-                    @foreach (var item in _sessionDataService.CurrentSession.SessionVersions.Where(sv => sv.Name != _sessionDataService.CurrentSessionVersionName))
+                    @foreach (var item in _sessionDataService.CurrentSession.SessionVersions.Where(sv => sv.Name != _sessionDataService.CurrentSessionVersion.Name))
                     {
                         <li><a class="dropdown-item" href="#">@item.Name</a></li>
                     }
