@@ -1,0 +1,22 @@
+﻿@page "/{SessionId:guid}"
+
+@inject ISessionRepository _sessionRepository;
+@inject NavigationManager _navigationManager;
+
+@code {
+    [Parameter]
+    public Guid SessionId { get; set; }
+
+    /// <summary>
+    /// This page redirects the user to the 
+    /// first version of the requested session.
+    /// </summary>
+    /// <returns></returns>
+    protected override async Task OnInitializedAsync()
+    {
+        var initialSession = await _sessionRepository.GetBySessionIdAsync(SessionId);
+
+        if (initialSession == null) _navigationManager.NavigateTo($"/Error");
+        else _navigationManager.NavigateTo($"/{SessionId}/{initialSession.SessionVersions.FirstOrDefault().Name}");
+    }
+}

@@ -30,14 +30,14 @@
                 <img src="data:image/png;base64,@Image" alt="Canvas" class="img-fluid img-thumbnail"/>
             </div>
             <div class="mb-3">
-                <label for="exampleFormControlTextarea1" class="form-label">Prompt area</label>
+                <br />
                 <textarea class="form-control" id="exampleFormControlTextarea1" @bind="Prompt" @bind:event="oninput" @onkeydown="@HandleEnter" rows="3"></textarea>
             </div>
         </div>
     </div>
 </div>
 
-@* TODO: Extract script into a json file ~Dan R. *@
+@* This script is used in order to download a file to the user's desktop *@
 <script>
     function downloadFile(fileName, content) {
         const blob = new Blob([content], { type: 'application/octet-stream' });
@@ -66,39 +66,38 @@
         {
             Image = Convert.ToBase64String(initialSession.SessionVersions.Where(sv => sv.Name == VersionName).SingleOrDefault().Image);
         }
-        else
-        {
-            var session = await _sessionRepository.GetBySessionIdAsync(SessionId);
-            if (session != null)
-            {
-                var firstSessionVersion = session.SessionVersions.FirstOrDefault();
-                if (firstSessionVersion != null)
-                {
-                    _navigationManager.NavigateTo($"/{session.SessionId}/{firstSessionVersion}");
-                }
-            }
-            else await _sessionLogicService.InitializeSessionAsync(); 
-        }
+        else _navigationManager.NavigateTo("/Error");
     }
 
+    /// <summary>
+    /// This method is meant to send the prompt contained in the texbox
+    /// to the necessary processing LLMs (ChatGPT/StabilityAI)
+    /// </summary>
+    /// <param name="e"></param>
     private async Task HandleEnter(KeyboardEventArgs e)
     {
         if (e.Key == "Enter")
         {
+            //Clear textbox
             var prompt = Prompt;
             Prompt = "";
 
+            //Get current session values
             var currentSession = await _sessionRepository.GetBySessionIdAsync(SessionId);
             var currentSessionVersion = await _sessionVersionRepository.GetBySessionIdVersionNameAsync(currentSession.Id, VersionName);
 
+            //Prompt filter
             var promptingOutput = await _llmServices.PromptAsync(prompt, currentSession, currentSessionVersion);
             if (promptingOutput == "DownloadImage") await _jsRuntime.InvokeVoidAsync("downloadFile", "output.png", currentSessionVersion.Image);
             else if (promptingOutput == "GenerateImage")
             {
+                //Generate the image
                 var image = await _llmServices.GenerateImageAsync(prompt);
 
+                //Generate a new version
                 var newVersion = await _sessionLogicService.InitializeNewSessionVersionAsync(Guid.NewGuid().ToString(), prompt, image, currentSession);
 
+                //Navigate to the newly generated version
                 _navigationManager.NavigateTo($"/{currentSession.SessionId.ToString()}/{newVersion.Name}", true);
             }
         }

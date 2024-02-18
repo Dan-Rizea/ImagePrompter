@@ -6,13 +6,13 @@
 
 @code {
     /// <summary>
-    /// Create a new session and navigate to it.
+    /// Creates a new session and navigates to it.
     /// </summary>
     /// <returns></returns>
     protected override async Task OnInitializedAsync()
     {
         var initializedSession = await _sessionLogicService.InitializeSessionAsync(false);
 
-        _navigationManager.NavigateTo($"/{initializedSession.SessionId}/{initializedSession.SessionVersions.FirstOrDefault().Name}");
+        _navigationManager.NavigateTo($"/{initializedSession.SessionId}/{initializedSession.SessionVersions.FirstOrDefault()!.Name}");
     }
 }
