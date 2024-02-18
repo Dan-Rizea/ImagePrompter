@@ -9,7 +9,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRazorComponents().AddInteractiveServerComponents();
 
 builder.Services.AddPersistenceServices(options => 
-    options.ConnectionString = builder.Configuration.GetConnectionString("DefaultConnection")!);
+    options.ConnectionString = builder.Configuration["ConnectionStrings:DefaultConnection"]!);
 
 builder.Services.AddApplicationServices();
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());

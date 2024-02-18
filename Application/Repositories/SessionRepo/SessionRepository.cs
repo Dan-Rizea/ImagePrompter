@@ -38,7 +38,6 @@ public class SessionRepository : ISessionRepository
         return await _context.Sessions
             .Include(s => s.SessionVersions)
             .Where(s => s.SessionId == sessionId)
-            .Where(s => s.DeletedAt == null)
             .SingleOrDefaultAsync();
     }
 
@@ -53,7 +52,6 @@ public class SessionRepository : ISessionRepository
         return await _context.Sessions
             .Include(s => s.SessionVersions.Where(sv => sv.Name == versionName))
             .Where(s => s.SessionId == sessionId)
-            .Where(s => s.DeletedAt == null)
             .SingleOrDefaultAsync();
     }
 }
