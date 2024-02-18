@@ -1,6 +1,6 @@
 ﻿using Persistence.Entities;
 
-namespace Application.Interfaces
+namespace Application.Repositories.SessionRepo
 {
     public interface ISessionRepository
     {

@@ -1,9 +1,8 @@
-﻿using Application.Interfaces;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Persistence;
 using Persistence.Entities;
 
-namespace Application.Repositories;
+namespace Application.Repositories.SessionRepo;
 public class SessionRepository : ISessionRepository
 {
     private readonly ApplicationDbContext _context;
@@ -22,10 +21,10 @@ public class SessionRepository : ISessionRepository
     public async Task<Session> CreateAsync(Session session)
     {
         if (session == null) throw new ArgumentNullException(nameof(session));
-        
+
         await _context.Sessions.AddAsync(session);
         await _context.SaveChangesAsync();
-        
+
         return session;
     }
 

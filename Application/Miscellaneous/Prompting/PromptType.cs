@@ -1,4 +1,4 @@
-﻿namespace Application.Miscellaneous
+﻿namespace Application.Miscellaneous.Prompting
 {
     internal enum PromptType
     {

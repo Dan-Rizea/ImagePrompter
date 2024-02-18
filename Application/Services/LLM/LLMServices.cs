@@ -1,8 +1,6 @@
-﻿using Application.DTOs;
-using Application.Miscellaneous;
+﻿using Application.Miscellaneous.Prompting;
 using Application.Models;
 using Application.Services.Mailing;
-using Application.Services.SessionLogic;
 using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;

@@ -1,4 +1,4 @@
-﻿namespace Application.Miscellaneous
+﻿namespace Application.Miscellaneous.Prompting
 {
     internal static class PromptTemplates
     {
@@ -8,7 +8,7 @@
         //TODO: Auto-generate prompt types through reflection in order to make the FilterPrompt more extensible.
         internal const string FilterPrompt =
             $"{AccuracyImprover}" +
-            "You are an agent meant to filter between several functionalities within an application." + 
+            "You are an agent meant to filter between several functionalities within an application." +
             "The application can generate images, edit images, downlad images, resize images, describe images, email images and animate images." +
             "Your task is to receive a prompt and provide an enum string based on a prompt, without saying anything else." +
             "If you are unsure of what to do with the user's prompt or if it does not match any of the mentioned functionalities, return the 'Error' enum." +

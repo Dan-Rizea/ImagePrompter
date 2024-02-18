@@ -1,9 +1,8 @@
-﻿using Application.Interfaces;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Persistence;
 using Persistence.Entities;
 
-namespace Application.Repositories
+namespace Application.Repositories.SessionVersionRepo
 {
     public class SessionVersionRepository : ISessionVersionRepository
     {

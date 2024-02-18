@@ -1,5 +1,5 @@
-﻿using Application.DTOs;
-using Application.Interfaces;
+﻿using Application.Repositories.SessionRepo;
+using Application.Repositories.SessionVersionRepo;
 using Microsoft.AspNetCore.Components;
 using Persistence.Entities;
 
@@ -8,16 +8,16 @@ namespace Application.Services.SessionLogic
     public class SessionLogicService : ISessionLogicService
     {
         private readonly ISessionRepository _sessionRepository;
-        private readonly NavigationManager _navigationManager;
         private readonly ISessionVersionRepository _sessionVersionRepository;
+        private readonly NavigationManager _navigationManager;
 
         public SessionLogicService(ISessionRepository sessionRepository, 
             NavigationManager navigationManager, 
             ISessionVersionRepository sessionVersionRepository)
         {
             _sessionRepository = sessionRepository;
-            _navigationManager = navigationManager;
             _sessionVersionRepository = sessionVersionRepository;
+            _navigationManager = navigationManager;
         }
 
         // ~TODO: Make method more generic ~Dan R.

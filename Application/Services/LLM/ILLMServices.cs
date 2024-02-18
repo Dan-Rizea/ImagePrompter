@@ -1,5 +1,4 @@
-﻿using Application.DTOs;
-using Persistence.Entities;
+﻿using Persistence.Entities;
 
 namespace Application.Services.LLM
 {
