@@ -1,15 +1,8 @@
 ﻿@page "/"
-
-@using Application.Services.ParentRefresh
-@using AutoMapper
-@using Application.DTOs
 @using Microsoft.EntityFrameworkCore.Metadata.Internal
 
 @inject ISessionLogicService _sessionLogicService;
-@inject ProtectedSessionStorage _protectedSessionStore;
 @inject NavigationManager _navigationManager;
-@inject IMapper _mapper;
-@inject IParentRefreshService _parentRefreshService;
 
 @code {
     /// <summary>
@@ -20,11 +13,6 @@
     {
         var initializedSession = await _sessionLogicService.InitializeSessionAsync(false);
 
-        // await _protectedSessionStore.SetAsync("currentSession", _mapper.Map<CurrentSessionDto>(initializedSession));
-        // await _protectedSessionStore.SetAsync("currentSessionVersion", _mapper.Map<CurrentSessionVersionDto>(initializedSession.SessionVersions.FirstOrDefault()));
-
         _navigationManager.NavigateTo($"/{initializedSession.SessionId}/{initializedSession.SessionVersions.FirstOrDefault().Name}");
-
-        // _parentRefreshService.CallRequestRefresh();
     }
 }

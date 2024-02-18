@@ -1,19 +1,6 @@
-﻿@using Application.DTOs
-@using Application.Services.ParentRefresh
-@inherits LayoutComponentBase
+﻿@inherits LayoutComponentBase
 
 @rendermode InteractiveServer
-
-@inject ISessionLogicService _sessionLogicService;
-@inject ISessionVersionRepository _sessionVersionRepository;
-@inject ProtectedSessionStorage _protectedSessionStore;
-@inject IParentRefreshService _parentRefreshService;
-
-<style>
-    #navbar {
-        background-color: #283655;
-    }
-</style>
 
 <head>
     <meta charset="utf-8">
@@ -23,30 +10,6 @@
 
 <div class="page">
     <main>
-@*     @if (CurrentSession == null)
-    {
-        <h1>Loading...</h1>
-    }
-    else
-    {
-        <div id="navbar" class="top-row px-4">
-            <button class="btn btn-secondary" type="button" aria-expanded="false" @onclick="() => _sessionLogicService.InitializeSessionAsync(true)">New Session</button>
-            <div class="dropdown">
-                <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                    @CurrentSessionVersion.Name
-                </button>
-                <ul class="dropdown-menu">
-                    @* TODO: exclude current version from list *@
-                    @* @foreach (var item in SessionVersions) *@
-                    @* { *@
-                        @* <li><a class="dropdown-item" href="#">@item.Name</a></li> *@
-                    @* } *@
-                  @*   <li><a class="dropdown-item" href="#">Something else here</a></li>
-                </ul>
-            </div>
-        </div>
-    } *@ 
-
         <article class="content px-4">
             @Body
         </article>
@@ -58,27 +21,3 @@
     <a href="" class="reload">Reload</a>
     <a class="dismiss">🗙</a>
 </div>
-
-@* @code {
-    private CurrentSessionDto CurrentSession { get; set; }
-    private CurrentSessionVersionDto CurrentSessionVersion { get; set; }
-    private IEnumerable<SessionVersion> SessionVersions { get; set; }
-
-    protected override async Task OnInitializedAsync()
-    {
-        // _parentRefreshService.RefreshRequested += RefreshMe;
-
-        var currentSession = await _protectedSessionStore.GetAsync<CurrentSessionDto>("currentSession");
-
-        var currentSessionVersion = await _protectedSessionStore.GetAsync<CurrentSessionVersionDto>("currentSessionVersion");
-        
-        CurrentSession = currentSession.Value;
-        CurrentSessionVersion = currentSessionVersion.Value;
-    }
-
-    // private void RefreshMe()
-    // {
-    //     StateHasChanged();
-    // }
-
-} *@

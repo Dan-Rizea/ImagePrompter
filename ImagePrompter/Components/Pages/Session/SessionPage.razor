@@ -1,10 +1,5 @@
 ﻿@page "/{SessionId:guid}/{VersionName}"
 
-@using Application.DTOs
-@using Application.Repositories
-@using Application.Services.ParentRefresh
-@using AutoMapper
-
 @attribute [StreamRendering]
 
 @inject NavigationManager _navigationManager;
@@ -13,9 +8,6 @@
 @inject ISessionVersionRepository _sessionVersionRepository;
 @inject ISessionLogicService _sessionLogicService;
 @inject ILLMServices _llmServices;
-@inject ProtectedSessionStorage _protectedSessionStore;
-@inject IMapper _mapper;
-@inject IParentRefreshService _parentRefreshService;
 
 <style>
     body {
@@ -34,16 +26,9 @@
 <div class="container pt-5">
     <div class="row justify-content-center">
         <div class="col-md-8">
-            @if (_protectedSessionStore is null)
-            {
-                <div id="spinner"></div>
-            }
-            else
-            {
-                <div class="image-container mt-5">
-                    <img src="data:image/png;base64,@Image" alt="Canvas" class="img-fluid img-thumbnail"/>
-                </div>
-            }
+            <div class="image-container mt-5">
+                <img src="data:image/png;base64,@Image" alt="Canvas" class="img-fluid img-thumbnail"/>
+            </div>
             <div class="mb-3">
                 <label for="exampleFormControlTextarea1" class="form-label">Prompt area</label>
                 <textarea class="form-control" id="exampleFormControlTextarea1" @bind="Prompt" @bind:event="oninput" @onkeydown="@HandleEnter" rows="3"></textarea>
@@ -79,15 +64,7 @@
         var initialSession = await _sessionRepository.GetBySessionIdAsync(SessionId);
         if (initialSession != null)
         {
-            var currentSession = _mapper.Map<CurrentSessionDto>(initialSession);
-            var currentSessionVersion = _mapper.Map<CurrentSessionVersionDto>(initialSession.SessionVersions.Where(sv => sv.Name == VersionName).SingleOrDefault());
-
-            await _protectedSessionStore.SetAsync("currentSession", currentSession);
-            await _protectedSessionStore.SetAsync("currentSessionVersion", currentSessionVersion);
-
-            Image = Convert.ToBase64String(currentSessionVersion.Image);
-
-            _parentRefreshService.CallRequestRefresh();
+            Image = Convert.ToBase64String(initialSession.SessionVersions.Where(sv => sv.Name == VersionName).SingleOrDefault().Image);
         }
         else
         {
@@ -108,22 +85,22 @@
     {
         if (e.Key == "Enter")
         {
-            // var currentSession = await _protectedSessionStore.GetAsync<CurrentSessionDto>("currentSession");
-            // var currentSessionVersion = await _protectedSessionStore.GetAsync<CurrentSessionVersionDto>("currentSessionVersion");
+            var prompt = Prompt;
+            Prompt = "";
+
             var currentSession = await _sessionRepository.GetBySessionIdAsync(SessionId);
             var currentSessionVersion = await _sessionVersionRepository.GetBySessionIdVersionNameAsync(currentSession.Id, VersionName);
 
-            var promptingOutput = await _llmServices.PromptAsync(Prompt, currentSession, currentSessionVersion);
+            var promptingOutput = await _llmServices.PromptAsync(prompt, currentSession, currentSessionVersion);
             if (promptingOutput == "DownloadImage") await _jsRuntime.InvokeVoidAsync("downloadFile", "output.png", currentSessionVersion.Image);
             else if (promptingOutput == "GenerateImage")
             {
-                var image = await _llmServices.GenerateImageAsync(Prompt);
+                var image = await _llmServices.GenerateImageAsync(prompt);
 
-                var newVersion = await _sessionLogicService.InitializeNewSessionVersionAsync(Guid.NewGuid().ToString(), Prompt, image, currentSession);
+                var newVersion = await _sessionLogicService.InitializeNewSessionVersionAsync(Guid.NewGuid().ToString(), prompt, image, currentSession);
 
                 _navigationManager.NavigateTo($"/{currentSession.SessionId.ToString()}/{newVersion.Name}", true);
             }
-            Prompt = "";
         }
     }
 }
