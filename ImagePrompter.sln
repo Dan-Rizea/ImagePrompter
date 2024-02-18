@@ -10,7 +10,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ImagePrompter", "ImagePromp
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Persistence", "Persistence\Persistence.csproj", "{2B50A2FA-6669-4BFC-8297-22059B98408B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Application", "Application\Application.csproj", "{5A39B108-FFAD-41A0-82F3-143D6B291052}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Application", "Application\Application.csproj", "{5A39B108-FFAD-41A0-82F3-143D6B291052}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

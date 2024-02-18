@@ -1,13 +1,21 @@
 ﻿@page "/{SessionId:guid}/{VersionName}"
 
+@using Application.DTOs
+@using Application.Repositories
+@using Application.Services.ParentRefresh
+@using AutoMapper
+
 @attribute [StreamRendering]
 
-@inject IJSRuntime _jsRuntime;
 @inject NavigationManager _navigationManager;
-@inject ISessionDataService _sessionDataService;
+@inject IJSRuntime _jsRuntime;
 @inject ISessionRepository _sessionRepository;
+@inject ISessionVersionRepository _sessionVersionRepository;
 @inject ISessionLogicService _sessionLogicService;
 @inject ILLMServices _llmServices;
+@inject ProtectedSessionStorage _protectedSessionStore;
+@inject IMapper _mapper;
+@inject IParentRefreshService _parentRefreshService;
 
 <style>
     body {
@@ -15,19 +23,25 @@
     }
 </style>
 
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.min.js" integrity="sha384-BBtl+eGJRgqQAUMxJ7pMwbEyER4l1g+O15P+16Ep7Q9Q+zqX6gSbd85u4mG4QzX+" crossorigin="anonymous"></script>
+</head>
+
 <PageTitle>Session</PageTitle>
 
 <div class="container pt-5">
     <div class="row justify-content-center">
         <div class="col-md-8">
-            @if (_sessionDataService.CurrentSession is null)
+            @if (_protectedSessionStore is null)
             {
                 <div id="spinner"></div>
             }
             else
             {
                 <div class="image-container mt-5">
-                    <img src="data:image/png;base64,@GetImage()" alt="Blank canvas" class="img-fluid img-thumbnail"/>
+                    <img src="data:image/png;base64,@Image" alt="Canvas" class="img-fluid img-thumbnail"/>
                 </div>
             }
             <div class="mb-3">
@@ -38,6 +52,7 @@
     </div>
 </div>
 
+@* TODO: Extract script into a json file ~Dan R. *@
 <script>
     function downloadFile(fileName, content) {
         const blob = new Blob([content], { type: 'application/octet-stream' });
@@ -46,7 +61,7 @@
         link.href = url;
         link.download = fileName;
         link.click();
-        window.URL.revokeObjectURL(url); // Cleanup
+        window.URL.revokeObjectURL(url);
     }
 </script>
 
@@ -57,15 +72,22 @@
     public string VersionName { get; set; }
 
     public string Prompt { get; set; } = string.Empty;
+    public string Image { get; set; } = string.Empty;
 
     protected override async Task OnInitializedAsync()
     {
-        var initialSession = await _sessionRepository.GetBySessionIdVersionNameAsync(SessionId, VersionName);
+        var initialSession = await _sessionRepository.GetBySessionIdAsync(SessionId);
         if (initialSession != null)
         {
-            _sessionDataService.CurrentSession = initialSession;
-            _sessionDataService.CurrentSessionVersion = initialSession.SessionVersions.Where(sv => sv.Name == VersionName).SingleOrDefault() 
-                ?? throw new NullReferenceException("No session version could be found");
+            var currentSession = _mapper.Map<CurrentSessionDto>(initialSession);
+            var currentSessionVersion = _mapper.Map<CurrentSessionVersionDto>(initialSession.SessionVersions.Where(sv => sv.Name == VersionName).SingleOrDefault());
+
+            await _protectedSessionStore.SetAsync("currentSession", currentSession);
+            await _protectedSessionStore.SetAsync("currentSessionVersion", currentSessionVersion);
+
+            Image = Convert.ToBase64String(currentSessionVersion.Image);
+
+            _parentRefreshService.CallRequestRefresh();
         }
         else
         {
@@ -82,19 +104,26 @@
         }
     }
 
-    private string GetImage()
-    {
-        var currentVersion = _sessionDataService.CurrentSessionVersion.Image;
-
-        return Convert.ToBase64String(currentVersion);
-    }
-
     private async Task HandleEnter(KeyboardEventArgs e)
     {
         if (e.Key == "Enter")
         {
-            var promptingOutput = await _llmServices.PromptAsync(Prompt);
-            if (promptingOutput == "DownloadImage") await _jsRuntime.InvokeVoidAsync("downloadFile", "output.png", _sessionDataService.CurrentSessionVersion.Image);
+            // var currentSession = await _protectedSessionStore.GetAsync<CurrentSessionDto>("currentSession");
+            // var currentSessionVersion = await _protectedSessionStore.GetAsync<CurrentSessionVersionDto>("currentSessionVersion");
+            var currentSession = await _sessionRepository.GetBySessionIdAsync(SessionId);
+            var currentSessionVersion = await _sessionVersionRepository.GetBySessionIdVersionNameAsync(currentSession.Id, VersionName);
+
+            var promptingOutput = await _llmServices.PromptAsync(Prompt, currentSession, currentSessionVersion);
+            if (promptingOutput == "DownloadImage") await _jsRuntime.InvokeVoidAsync("downloadFile", "output.png", currentSessionVersion.Image);
+            else if (promptingOutput == "GenerateImage")
+            {
+                var image = await _llmServices.GenerateImageAsync(Prompt);
+
+                var newVersion = await _sessionLogicService.InitializeNewSessionVersionAsync(Guid.NewGuid().ToString(), Prompt, image, currentSession);
+
+                _navigationManager.NavigateTo($"/{currentSession.SessionId.ToString()}/{newVersion.Name}", true);
+            }
+            Prompt = "";
         }
     }
 }

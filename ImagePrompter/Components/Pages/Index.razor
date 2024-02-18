@@ -1,8 +1,15 @@
 ﻿@page "/"
+
+@using Application.Services.ParentRefresh
+@using AutoMapper
+@using Application.DTOs
 @using Microsoft.EntityFrameworkCore.Metadata.Internal
 
 @inject ISessionLogicService _sessionLogicService;
-@inject ISessionDataService _sessionDataService;
+@inject ProtectedSessionStorage _protectedSessionStore;
+@inject NavigationManager _navigationManager;
+@inject IMapper _mapper;
+@inject IParentRefreshService _parentRefreshService;
 
 @code {
     /// <summary>
@@ -11,8 +18,13 @@
     /// <returns></returns>
     protected override async Task OnInitializedAsync()
     {
-        var initializedSession = await _sessionLogicService.InitializeSessionAsync();
-        _sessionDataService.CurrentSession = initializedSession; 
-        _sessionDataService.CurrentSessionVersion = initializedSession.SessionVersions.FirstOrDefault()!;
+        var initializedSession = await _sessionLogicService.InitializeSessionAsync(false);
+
+        // await _protectedSessionStore.SetAsync("currentSession", _mapper.Map<CurrentSessionDto>(initializedSession));
+        // await _protectedSessionStore.SetAsync("currentSessionVersion", _mapper.Map<CurrentSessionVersionDto>(initializedSession.SessionVersions.FirstOrDefault()));
+
+        _navigationManager.NavigateTo($"/{initializedSession.SessionId}/{initializedSession.SessionVersions.FirstOrDefault().Name}");
+
+        // _parentRefreshService.CallRequestRefresh();
     }
 }

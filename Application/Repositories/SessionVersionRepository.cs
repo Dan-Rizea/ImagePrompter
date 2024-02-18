@@ -35,12 +35,42 @@ namespace Application.Repositories
         /// </summary>
         /// <param name="sessionVersionId"></param>
         /// <returns>The found session version</returns>
-        public async Task<SessionVersion?> GetBySessionIdAsync(int sessionVersionId)
+        public async Task<SessionVersion?> GetBySessionVersionIdAsync(int sessionVersionId)
         {
             return await _context.Versions
                 .Where(s => s.Id == sessionVersionId)
                 .SingleOrDefaultAsync();
         }
 
+        /// <summary>
+        /// Gets a session version by its name
+        /// </summary>
+        /// <param name="sessionName"></param>
+        /// <returns>The found session version</returns>
+        public async Task<SessionVersion?> GetBySessionIdVersionNameAsync(int sessionId, string sessionName)
+        {
+            return await _context.Versions
+                .Where(s => s.SessionId == sessionId)
+                .Where(s => s.Name == sessionName)
+                .SingleOrDefaultAsync();
+        }
+
+
+        /// <summary>
+        /// Gets a session version by its Id
+        /// </summary>
+        /// <param name="sessionVersionId"></param>
+        /// <returns>The found session version</returns>
+        public async Task<IEnumerable<SessionVersion>> GetBySessionIdAsync(int sessionId)
+        {
+            var session = await _context.Sessions
+                .Include(s => s.SessionVersions)
+                .Where(s => s.Id == sessionId)
+                .SingleOrDefaultAsync();
+
+            //TODO: Handle nulls ~Dan R.
+
+            return session.SessionVersions;
+        }
     }
 }

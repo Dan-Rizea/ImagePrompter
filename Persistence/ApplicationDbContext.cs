@@ -3,6 +3,7 @@ using Persistence.Entities;
 
 namespace Persistence
 {
+    //TODO: Add more metadata for auditing ~Dan R.
     public class ApplicationDbContext : DbContext
     {
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options) {}

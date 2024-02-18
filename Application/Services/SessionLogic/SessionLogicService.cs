@@ -1,4 +1,5 @@
-﻿using Application.Interfaces;
+﻿using Application.DTOs;
+using Application.Interfaces;
 using Microsoft.AspNetCore.Components;
 using Persistence.Entities;
 
@@ -8,14 +9,34 @@ namespace Application.Services.SessionLogic
     {
         private readonly ISessionRepository _sessionRepository;
         private readonly NavigationManager _navigationManager;
+        private readonly ISessionVersionRepository _sessionVersionRepository;
 
-        public SessionLogicService(ISessionRepository sessionRepository, NavigationManager navigationManager)
+        public SessionLogicService(ISessionRepository sessionRepository, 
+            NavigationManager navigationManager, 
+            ISessionVersionRepository sessionVersionRepository)
         {
             _sessionRepository = sessionRepository;
             _navigationManager = navigationManager;
+            _sessionVersionRepository = sessionVersionRepository;
         }
 
-        public async Task<Session> InitializeSessionAsync()
+        // ~TODO: Make method more generic ~Dan R.
+        public async Task<SessionVersion> InitializeNewSessionVersionAsync(string name, string prompt, byte[] image, Session currentSession)
+        {
+            var sessionVersionToCreate = new SessionVersion()
+            {
+                Image = image,
+                Name = name,
+                Prompt = prompt,
+                SessionId = currentSession.Id
+            };
+
+            var createdVersion = await _sessionVersionRepository.CreateAsync(sessionVersionToCreate);
+
+            return createdVersion;
+        }
+
+        public async Task<Session> InitializeSessionAsync(bool enableNavigation)
         {
             var newSessionVersion = new SessionVersion()
             {
@@ -31,26 +52,21 @@ namespace Application.Services.SessionLogic
                 SessionVersions = newSessionVersions
             };
 
-            await _sessionRepository.CreateAsync(newSession);
+            var createdSession = await _sessionRepository.CreateAsync(newSession);
 
-            _navigationManager.NavigateTo($"/{newSession.SessionId}/{newSessionVersion.Name}");
+            if(enableNavigation) _navigationManager.NavigateTo($"/{createdSession.SessionId}/{newSessionVersion.Name}");
 
             return newSession;
         }
 
         private static async Task<byte[]> GetTemplateImageAsync()
         {
-            // Get the path to the template image
+            //TODO: Make the path configurable ~ Dan R.
             string path = Path.Combine(Environment.CurrentDirectory, "wwwroot", "images", "template.png");
 
-            // Use File.ReadAllBytesAsync for efficient asynchronous IO
-            try
-            {
-                return await File.ReadAllBytesAsync(path);
-            }
+            try { return await File.ReadAllBytesAsync(path); }
             catch (Exception ex)
             {
-                // Handle errors gracefully, e.g., log the exception and return null
                 throw new Exception($"Error loading template image: {ex.Message}");
             }
         }

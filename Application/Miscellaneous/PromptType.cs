@@ -2,13 +2,10 @@
 {
     internal enum PromptType
     {
-        Filter = 0,
-        GenerateImage = 1,
-        EditImage = 2,
-        DownloadImage = 3,
-        ResizeImage = 4,
-        DescribeImage = 5,
-        EmailImage = 6,
-        Error = 7,
+        GenerateImage = 0,
+        EditImage = 1,
+        DownloadImage = 2,
+        EmailImage = 3,
+        Error = 4,
     }
 }

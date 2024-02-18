@@ -1,11 +1,12 @@
-﻿using Application.Miscellaneous;
+﻿using Application.DTOs;
+using Application.Miscellaneous;
 using Application.Models;
 using Application.Services.Mailing;
-using Application.Services.SessionData;
+using Application.Services.SessionLogic;
 using Microsoft.Extensions.Configuration;
-using Microsoft.JSInterop;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using Persistence.Entities;
 using System.Text;
 
 namespace Application.Services.LLM
@@ -20,33 +21,28 @@ namespace Application.Services.LLM
 
         private readonly IConfiguration _config;
         private readonly IMailingService _mailingService;
-        private readonly ISessionDataService _sessionDataService;
 
-        public LLMServices(IConfiguration config, IMailingService mailingService, ISessionDataService sessionDataService)
+        public LLMServices(IConfiguration config, 
+            IMailingService mailingService) 
         {
             _config = config;
             _mailingService = mailingService;
-            _sessionDataService = sessionDataService;
         }
 
-        public async Task<string> PromptAsync(string prompt)
+        public async Task<string> PromptAsync(string prompt, Session currentSession, SessionVersion currentSessionVersion)
         {
             var promptType = await GetPromptTypeAsync(prompt);
 
             switch (promptType)
             {
                 case PromptType.GenerateImage:
-                    return await GenerateImageAsync(prompt);
+                    return promptType.ToString();
                 case PromptType.EditImage:
                     return await EditImageAsync(prompt);
                 case PromptType.DownloadImage:
                     return promptType.ToString();
-                case PromptType.ResizeImage:
-                    return await ResizeImageAsync(prompt);
-                case PromptType.DescribeImage:
-                    return await DescribeImageAsync(prompt);
                 case PromptType.EmailImage:
-                    await EmailImageAsync(prompt);
+                    await EmailImageAsync(prompt, currentSessionVersion.Image);
                     return "PLACEHOLDER";
                 case PromptType.Error:
                 default:
@@ -63,7 +59,7 @@ namespace Application.Services.LLM
             return promptType;
         }
 
-        private async Task EmailImageAsync(string prompt)
+        private async Task EmailImageAsync(string prompt, byte[] image)
         {
             var mailingDetails = await QueryChatGPT(PromptTemplates.MailingPrompt, prompt, true);
 
@@ -71,9 +67,7 @@ namespace Application.Services.LLM
 
             if (deserializedDetails.Error) return;
 
-            var imageToSend = _sessionDataService.CurrentSessionVersion.Image;
-
-            await _mailingService.SendMailAsync(imageToSend,
+            await _mailingService.SendMailAsync(image,
                 deserializedDetails.Email,
                 deserializedDetails.Subject,
                 deserializedDetails.MessageBody,
@@ -81,24 +75,59 @@ namespace Application.Services.LLM
             );
         }
 
-        private async Task<string> DescribeImageAsync(string prompt)
-        {
-            throw new NotImplementedException();
-        }
-
-        private async Task<string> ResizeImageAsync(string prompt)
-        {
-            throw new NotImplementedException();
-        }
-
         private async Task<string> EditImageAsync(string prompt)
         {
             throw new NotImplementedException();
         }
 
-        private async Task<string> GenerateImageAsync(string prompt)
+        public async Task<byte[]> GenerateImageAsync(string prompt)
         {
-            throw new NotImplementedException();
+            const string Url = "https://api.stability.ai/v1/generation/stable-diffusion-xl-1024-v1-0/text-to-image";
+            var apiKey = _config["LLMKeys:StabilityAIAPIKey"];
+
+            var body = new
+            {
+                steps = 40,
+                width = 1024,
+                height = 1024,
+                seed = 0,
+                cfg_scale = 5,
+                samples = 1,
+                text_prompts = new[]
+                {
+                    new
+                    {
+                        text = prompt,
+                        weight = 1
+                    },
+                    new
+                    {
+                        text = "blurry, bad",
+                        weight = -1
+                    }
+                }
+            };
+
+            using (var client = new HttpClient())
+            {
+                var request = new HttpRequestMessage(HttpMethod.Post, Url);
+                request.Headers.Add("Authorization", apiKey);
+                request.Headers.Add("Accept", "application/json");
+
+                request.Content = new StringContent(JsonConvert.SerializeObject(body), null, "application/json");
+
+                var response = await client.SendAsync(request);
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    throw new Exception($"Non-200 response: {await response.Content.ReadAsStringAsync()}");
+                }
+
+                var data = JObject.Parse(await response.Content.ReadAsStringAsync());
+                var image = data["artifacts"][0]["base64"].Value<string>();
+
+                return Convert.FromBase64String(image);
+            }
         }
 
         /// <summary>
@@ -112,6 +141,10 @@ namespace Application.Services.LLM
         {
             var requestTime = TimeSpan.Parse(_config.GetSection("DefaultLLMTimeout").Value
                 ?? throw new NullReferenceException("Please add an LLM timeout value."));
+
+            //TODO: Make model configurable
+            promptTemplate.Replace("\n", "");
+            userPrompt = userPrompt.Replace("\n", "");
 
             var content = new StringContent($@"
                 {{
@@ -137,21 +170,22 @@ namespace Application.Services.LLM
 
             var apiKey = _config["LLMKeys:OpenAIAPIKey"];
 
-            var client = new HttpClient();
+            using (var client = new HttpClient())
+            {
+                client.DefaultRequestHeaders.Add("Authorization", $"Bearer {apiKey}");
+                var request = new HttpRequestMessage(HttpMethod.Post, "https://api.openai.com/v1/chat/completions");
+                request.Headers.Add("Accept", "application/json");
 
-            client.DefaultRequestHeaders.Add("Authorization", $"Bearer {apiKey}");
-            var request = new HttpRequestMessage(HttpMethod.Post, "https://api.openai.com/v1/chat/completions");
-            request.Headers.Add("Accept", "application/json");
+                client.Timeout = requestTime;
 
-            client.Timeout = requestTime;
+                request.Content = content;
 
-            request.Content = content;
+                var response = await client.SendAsync(request);
+                //response.EnsureSuccessStatusCode();
 
-            var response = await client.SendAsync(request);
-            //response.EnsureSuccessStatusCode();
-
-            var jsonResponse = JObject.Parse(await response.Content.ReadAsStringAsync());
-            return jsonResponse["choices"][0]["message"]["content"].Value<string>();
+                var jsonResponse = JObject.Parse(await response.Content.ReadAsStringAsync());
+                return jsonResponse["choices"][0]["message"]["content"].Value<string>();
+            }
         }
 
     }
