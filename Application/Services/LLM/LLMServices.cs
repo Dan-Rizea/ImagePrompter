@@ -1,5 +1,5 @@
 ﻿using Application.Miscellaneous.Prompting;
-using Application.Models;
+using Application.Dtos;
 using Application.Services.Mailing;
 using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
@@ -12,7 +12,7 @@ namespace Application.Services.LLM
     public class LLMServices : ILLMServices
     {
         // Consideration for SemanticKernel:
-        // Due to the fact that the main use case for this application consists of image generation, I think that it might be a bit overkill.
+        // Due to the fact that the main use case for this application mainly consists of image generation, I think that it might be a bit overkill.
         // Therefore, I am only going to use HttpRequests.
 
         //TODO: This class is getting cluttered. Split into helper methods containing the private functionalities ~ Dan R.
@@ -27,6 +27,7 @@ namespace Application.Services.LLM
             _mailingService = mailingService;
         }
 
+        /// <inheritdoc cref="ILLMServices.PromptAsync(string, Session, SessionVersion)(string)"/>
         public async Task<string> PromptAsync(string prompt, Session currentSession, SessionVersion currentSessionVersion)
         {
             var promptType = await GetPromptTypeAsync(prompt);
@@ -35,19 +36,23 @@ namespace Application.Services.LLM
             {
                 case PromptType.GenerateImage:
                     return promptType.ToString();
-                case PromptType.EditImage:
-                    return await EditImageAsync(prompt);
                 case PromptType.DownloadImage:
                     return promptType.ToString();
                 case PromptType.EmailImage:
                     await EmailImageAsync(prompt, currentSessionVersion.Image);
-                    return "PLACEHOLDER";
+                    return promptType.ToString();
                 case PromptType.Error:
+                    return "Please provide a prompt that is in the scope of this application";
                 default:
                     return "An unexpected error has occured. Please try again.";
             }
         }
 
+        /// <summary>
+        /// Filter between prompts
+        /// </summary>
+        /// <param name="prompt">User-provided prompt</param>
+        /// <returns>A prompt type</returns>
         private async Task<PromptType> GetPromptTypeAsync(string prompt)
         {
             var pickedFunctionality = await QueryChatGPT(PromptTemplates.FilterPrompt, prompt);
@@ -57,11 +62,17 @@ namespace Application.Services.LLM
             return promptType;
         }
 
+        /// <summary>
+        /// This method sends an email based on the details of the user-provided prompt.
+        /// </summary>
+        /// <param name="prompt"></param>
+        /// <param name="image"></param>
+        /// <returns></returns>
         private async Task EmailImageAsync(string prompt, byte[] image)
         {
-            var mailingDetails = await QueryChatGPT(PromptTemplates.MailingPrompt, prompt, true);
+            var mailingDetails = await QueryChatGPT(PromptTemplates.MailingPrompt, prompt);
 
-            var deserializedDetails = JsonConvert.DeserializeObject<MailingModel>(mailingDetails);
+            var deserializedDetails = JsonConvert.DeserializeObject<MailingDto>(mailingDetails);
 
             if (deserializedDetails.Error) return;
 
@@ -73,11 +84,7 @@ namespace Application.Services.LLM
             );
         }
 
-        private async Task<string> EditImageAsync(string prompt)
-        {
-            throw new NotImplementedException();
-        }
-
+        /// <inheritdoc cref="ILLMServices.GenerateImageAsync(string)"/>
         public async Task<byte[]> GenerateImageAsync(string prompt)
         {
             const string Url = "https://api.stability.ai/v1/generation/stable-diffusion-xl-1024-v1-0/text-to-image";
@@ -131,14 +138,15 @@ namespace Application.Services.LLM
         /// <summary>
         /// This method sends a prompt to GPT-4
         /// </summary>
-        /// <param name="prompt">The prompt</param>
-        /// <param name="jsonMode">Optional json_mode querying</param>
+        /// <param name="userPrompt">User-provided prompt</param>
+        /// <param name="promptTemplate">The template of the prompt</param>
         /// <returns>String response</returns>
         /// <exception cref="NullReferenceException"></exception>
-        private async Task<string> QueryChatGPT(string promptTemplate, string userPrompt, bool jsonMode = false)
+        private async Task<string> QueryChatGPT(string promptTemplate, string userPrompt)
         {
             var requestTime = TimeSpan.Parse(_config.GetSection("DefaultLLMTimeout").Value
                 ?? throw new NullReferenceException("Please add an LLM timeout value."));
+            var apiKey = _config["LLMKeys:OpenAIAPIKey"];
 
             //TODO: Make model configurable
             promptTemplate.Replace("\n", "");
@@ -166,8 +174,6 @@ namespace Application.Services.LLM
                   ""frequency_penalty"": 0
                 }}", Encoding.UTF8, "application/json");
 
-            var apiKey = _config["LLMKeys:OpenAIAPIKey"];
-
             using (var client = new HttpClient())
             {
                 client.DefaultRequestHeaders.Add("Authorization", $"Bearer {apiKey}");
@@ -175,16 +181,14 @@ namespace Application.Services.LLM
                 request.Headers.Add("Accept", "application/json");
 
                 client.Timeout = requestTime;
-
                 request.Content = content;
 
                 var response = await client.SendAsync(request);
-                //response.EnsureSuccessStatusCode();
+                response.EnsureSuccessStatusCode();
 
                 var jsonResponse = JObject.Parse(await response.Content.ReadAsStringAsync());
                 return jsonResponse["choices"][0]["message"]["content"].Value<string>();
             }
         }
-
     }
 }

@@ -13,9 +13,11 @@ namespace Application.Services.Mailing
         {
             _config = config;
         }
-
+        
+        /// <inheritdoc cref="IMailingService.SendMailAsync(byte[], string, string, string, string)"/>
         public async Task SendMailAsync(byte[] attachments, string email, string subject, string messageBody, string customerName)
         {
+            //Configuration settings
             var senderName = _config["MailSettings:SenderName"];
             var senderEmail = _config["MailSettings:SenderEmail"];
             var server = _config["MailSettings:Server"];
@@ -23,6 +25,7 @@ namespace Application.Services.Mailing
             var username = _config["MailSettings:UserName"];
             var password = _config["MailSettings:Password"];
 
+            //Mailing configuration
             var message = new MimeMessage();
             message.From.Add(new MailboxAddress(senderName, senderEmail));
             message.To.Add(new MailboxAddress(customerName, email));
@@ -34,7 +37,9 @@ namespace Application.Services.Mailing
 
             message.Body = builder.ToMessageBody();
 
-            //TODO: Address security issues: not using a SecureString for authentication does not seem right to me.
+            //TODO: Address security issues: not using a SecureString for authentication does not seem right to me. ~Dan R.
+
+            //Sends the request
             using (var client = new SmtpClient())
             {
                 await client.ConnectAsync(server, port, SecureSocketOptions.StartTls);

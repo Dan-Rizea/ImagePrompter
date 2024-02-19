@@ -13,12 +13,7 @@ namespace Application.Repositories.SessionVersionRepo
             _context = context ?? throw new ArgumentNullException(nameof(context));
         }
 
-        /// <summary>
-        /// Creates a session version
-        /// </summary>
-        /// <param name="sessionVersion">Version Instance</param>
-        /// <returns>The created session version</returns>
-        /// <exception cref="ArgumentNullException"></exception>
+        /// <inheritdoc cref="ISessionVersionRepository.CreateAsync(SessionVersion)"/>
         public async Task<SessionVersion> CreateAsync(SessionVersion sessionVersion)
         {
             if (sessionVersion == null) throw new ArgumentNullException(nameof(sessionVersion));
@@ -29,23 +24,7 @@ namespace Application.Repositories.SessionVersionRepo
             return sessionVersion;
         }
 
-        /// <summary>
-        /// Gets a session version by its Id
-        /// </summary>
-        /// <param name="sessionVersionId"></param>
-        /// <returns>The found session version</returns>
-        public async Task<SessionVersion?> GetBySessionVersionIdAsync(int sessionVersionId)
-        {
-            return await _context.Versions
-                .Where(s => s.Id == sessionVersionId)
-                .SingleOrDefaultAsync();
-        }
-
-        /// <summary>
-        /// Gets a session version by its name
-        /// </summary>
-        /// <param name="sessionName"></param>
-        /// <returns>The found session version</returns>
+        /// <inheritdoc cref="ISessionVersionRepository.GetBySessionIdVersionNameAsync(int, string)"/>
         public async Task<SessionVersion?> GetBySessionIdVersionNameAsync(int sessionId, string sessionName)
         {
             return await _context.Versions
@@ -54,12 +33,7 @@ namespace Application.Repositories.SessionVersionRepo
                 .SingleOrDefaultAsync();
         }
 
-
-        /// <summary>
-        /// Gets a session version by its Id
-        /// </summary>
-        /// <param name="sessionVersionId"></param>
-        /// <returns>The found session version</returns>
+        /// <inheritdoc cref="ISessionVersionRepository.GetBySessionIdAsync(int)(int, string)"/>
         public async Task<IEnumerable<SessionVersion>> GetBySessionIdAsync(int sessionId)
         {
             var session = await _context.Sessions

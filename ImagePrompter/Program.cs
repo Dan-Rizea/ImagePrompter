@@ -12,8 +12,6 @@ builder.Services.AddPersistenceServices(options =>
     options.ConnectionString = builder.Configuration["ConnectionStrings:DefaultConnection"]!);
 
 builder.Services.AddApplicationServices();
-builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
-
 
 var app = builder.Build();
 

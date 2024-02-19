@@ -21,6 +21,7 @@ namespace Application.Services.SessionLogic
         }
 
         // ~TODO: Make method more generic ~Dan R.
+        /// <inheritdoc cref="ISessionLogicService.InitializeNewSessionVersionAsync(string, string, byte[], Session)"/>
         public async Task<SessionVersion> InitializeNewSessionVersionAsync(string name, string prompt, byte[] image, Session currentSession)
         {
             var sessionVersionToCreate = new SessionVersion()
@@ -36,6 +37,7 @@ namespace Application.Services.SessionLogic
             return createdVersion;
         }
 
+        /// <inheritdoc cref="ISessionLogicService.InitializeSessionAsync(bool)"/>
         public async Task<Session> InitializeSessionAsync(bool enableNavigation)
         {
             var newSessionVersion = new SessionVersion()
@@ -59,6 +61,11 @@ namespace Application.Services.SessionLogic
             return newSession;
         }
 
+        /// <summary>
+        /// Gets the template image for each new session
+        /// </summary>
+        /// <returns>An image</returns>
+        /// <exception cref="Exception"></exception>
         private static async Task<byte[]> GetTemplateImageAsync()
         {
             //TODO: Make the path configurable ~ Dan R.

@@ -12,12 +12,7 @@ public class SessionRepository : ISessionRepository
         _context = context ?? throw new ArgumentNullException(nameof(context));
     }
 
-    /// <summary>
-    /// Creates a session
-    /// </summary>
-    /// <param name="session">Session Instance</param>
-    /// <returns>The created session</returns>
-    /// <exception cref="ArgumentNullException"></exception>
+    /// <inheritdoc cref="ISessionRepository.CreateAsync(Session)"/>
     public async Task<Session> CreateAsync(Session session)
     {
         if (session == null) throw new ArgumentNullException(nameof(session));
@@ -28,11 +23,7 @@ public class SessionRepository : ISessionRepository
         return session;
     }
 
-    /// <summary>
-    /// Gets a session by its Id
-    /// </summary>
-    /// <param name="sessionId"></param>
-    /// <returns>The found session</returns>
+    /// <inheritdoc cref="ISessionRepository.GetBySessionIdAsync(Guid)"/>
     public async Task<Session?> GetBySessionIdAsync(Guid sessionId)
     {
         return await _context.Sessions
@@ -41,16 +32,11 @@ public class SessionRepository : ISessionRepository
             .SingleOrDefaultAsync();
     }
 
-    /// <summary>
-    /// Gets a session by its Id and by its version Id
-    /// </summary>
-    /// <param name="sessionId"></param>
-    /// <param name="versionName"></param>
-    /// <returns></returns>
-    public async Task<Session?> GetBySessionIdVersionNameAsync(Guid sessionId, string versionName)
+    /// <inheritdoc cref="ISessionRepository.GetBySessionIdVersionNameAsync(Guid, string)"/>
+    public async Task<Session?> GetBySessionIdVersionNameAsync(Guid sessionId, string sessionVersionName)
     {
         return await _context.Sessions
-            .Include(s => s.SessionVersions.Where(sv => sv.Name == versionName))
+            .Include(s => s.SessionVersions.Where(sv => sv.Name == sessionVersionName))
             .Where(s => s.SessionId == sessionId)
             .SingleOrDefaultAsync();
     }

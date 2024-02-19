@@ -1,6 +1,9 @@
-﻿namespace Application.Models
+﻿namespace Application.Dtos
 {
-    internal class MailingModel
+    /// <summary>
+    /// This is used as a data transfer object between ChatGPT and the mailing functionality
+    /// </summary>
+    internal class MailingDto
     {
         public string Email { get; set; }
         public string? Subject { get; set; }

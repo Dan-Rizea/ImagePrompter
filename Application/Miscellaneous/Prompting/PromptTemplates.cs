@@ -1,5 +1,9 @@
 ﻿namespace Application.Miscellaneous.Prompting
 {
+    /// <summary>
+    /// This class contains the system-provided prompts that will 
+    /// be fed to the LLMs alongside the user-provided prompts
+    /// </summary>
     internal static class PromptTemplates
     {
         //This prompt has been proven to improve a model's accuracy and reduce hallucinations.
@@ -12,7 +16,7 @@
             "The application can generate images, edit images, downlad images, resize images, describe images, email images and animate images." +
             "Your task is to receive a prompt and provide an enum string based on a prompt, without saying anything else." +
             "If you are unsure of what to do with the user's prompt or if it does not match any of the mentioned functionalities, return the 'Error' enum." +
-            "The other available enums are: 'GenerateImage', 'EditImage', 'DownloadImage', 'EmailImage'." +
+            "The other available enums are: 'GenerateImage', 'DownloadImage', 'EmailImage'." +
             "Your user-provided prompt is this: ";
 
         internal const string MailingPrompt =
