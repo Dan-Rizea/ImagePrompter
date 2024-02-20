@@ -1,49 +1,41 @@
-﻿using MailKit.Net.Smtp;
+﻿using Application.Dtos;
+using Application.Services.SecretManager;
+using MailKit.Net.Smtp;
 using MailKit.Security;
-using Microsoft.Extensions.Configuration;
 using MimeKit;
 
 namespace Application.Services.Mailing
 {
     public class MailingService : IMailingService
     {
-        private readonly IConfiguration _config;
+        private readonly ISecretManager _secretManager;
 
-        public MailingService(IConfiguration config)
+        public MailingService(ISecretManager secretManager)
         {
-            _config = config;
+            _secretManager = secretManager;
         }
         
-        /// <inheritdoc cref="IMailingService.SendMailAsync(byte[], string, string, string, string)"/>
-        public async Task SendMailAsync(byte[] attachments, string email, string subject, string messageBody, string customerName)
+        /// <inheritdoc cref="IMailingService.SendMailAsync(byte[], MailingDto)"/>
+        public async Task SendMailAsync(byte[] attachments, MailingDto mailingDetails)
         {
-            //Configuration settings
-            var senderName = _config["MailSettings:SenderName"];
-            var senderEmail = _config["MailSettings:SenderEmail"];
-            var server = _config["MailSettings:Server"];
-            var port = int.Parse(_config["MailSettings:Port"]);
-            var username = _config["MailSettings:UserName"];
-            var password = _config["MailSettings:Password"];
+            var mailingCredentials = await _secretManager.GetMailingCredentials();
 
             //Mailing configuration
             var message = new MimeMessage();
-            message.From.Add(new MailboxAddress(senderName, senderEmail));
-            message.To.Add(new MailboxAddress(customerName, email));
-            message.Subject = subject;
+            message.From.Add(new MailboxAddress(mailingCredentials.SenderName, mailingCredentials.SenderEmail));
+            message.To.Add(new MailboxAddress(mailingDetails.CustomerName, mailingDetails.Email));
+            message.Subject = mailingDetails.Subject;
 
             var builder = new BodyBuilder();
-            builder.TextBody = messageBody;
+            builder.TextBody = mailingDetails.MessageBody;
             builder.Attachments.Add(@"Output.png", attachments);
 
             message.Body = builder.ToMessageBody();
 
-            //TODO: Address security issues: not using a SecureString for authentication does not seem right to me. ~Dan R.
-
-            //Sends the request
             using (var client = new SmtpClient())
             {
-                await client.ConnectAsync(server, port, SecureSocketOptions.StartTls);
-                await client.AuthenticateAsync(username, password);
+                await client.ConnectAsync(mailingCredentials.Server, int.Parse(mailingCredentials.Port), SecureSocketOptions.StartTls);
+                await client.AuthenticateAsync(mailingCredentials.UserName, mailingCredentials.Password);
                 await client.SendAsync(message);
                 await client.DisconnectAsync(true);
             }

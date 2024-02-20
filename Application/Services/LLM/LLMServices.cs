@@ -6,6 +6,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Persistence.Entities;
 using System.Text;
+using Application.Services.SecretManager;
 
 namespace Application.Services.LLM
 {
@@ -19,12 +20,15 @@ namespace Application.Services.LLM
 
         private readonly IConfiguration _config;
         private readonly IMailingService _mailingService;
+        private readonly ISecretManager _secretManager;
 
-        public LLMServices(IConfiguration config, 
-            IMailingService mailingService) 
+        public LLMServices(IConfiguration config,
+            IMailingService mailingService,
+            ISecretManager secretManager)
         {
             _config = config;
             _mailingService = mailingService;
+            _secretManager = secretManager;
         }
 
         /// <inheritdoc cref="ILLMServices.PromptAsync(string, Session, SessionVersion)(string)"/>
@@ -76,19 +80,14 @@ namespace Application.Services.LLM
 
             if (deserializedDetails.Error) return;
 
-            await _mailingService.SendMailAsync(image,
-                deserializedDetails.Email,
-                deserializedDetails.Subject,
-                deserializedDetails.MessageBody,
-                deserializedDetails.CustomerName
-            );
+            await _mailingService.SendMailAsync(image, deserializedDetails);
         }
 
         /// <inheritdoc cref="ILLMServices.GenerateImageAsync(string)"/>
         public async Task<byte[]> GenerateImageAsync(string prompt)
         {
             const string Url = "https://api.stability.ai/v1/generation/stable-diffusion-xl-1024-v1-0/text-to-image";
-            var apiKey = _config["LLMKeys:StabilityAIAPIKey"];
+            var apiKey = await _secretManager.GetStabilityAIApiKey();
 
             var body = new
             {
@@ -144,9 +143,9 @@ namespace Application.Services.LLM
         /// <exception cref="NullReferenceException"></exception>
         private async Task<string> QueryChatGPT(string promptTemplate, string userPrompt)
         {
-            var requestTime = TimeSpan.Parse(_config.GetSection("DefaultLLMTimeout").Value
+            var requestTimeout = TimeSpan.Parse(_config.GetSection("DefaultLLMTimeout").Value
                 ?? throw new NullReferenceException("Please add an LLM timeout value."));
-            var apiKey = _config["LLMKeys:OpenAIAPIKey"];
+            var apiKey = await _secretManager.GetOpenAIApiKey();
 
             //TODO: Make model configurable
             promptTemplate.Replace("\n", "");
@@ -180,7 +179,7 @@ namespace Application.Services.LLM
                 var request = new HttpRequestMessage(HttpMethod.Post, "https://api.openai.com/v1/chat/completions");
                 request.Headers.Add("Accept", "application/json");
 
-                client.Timeout = requestTime;
+                client.Timeout = requestTimeout;
                 request.Content = content;
 
                 var response = await client.SendAsync(request);

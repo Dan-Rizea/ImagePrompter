@@ -3,12 +3,12 @@
     /// <summary>
     /// This is used as a data transfer object between ChatGPT and the mailing functionality
     /// </summary>
-    internal class MailingDto
+    public record MailingDto
     {
-        public string Email { get; set; }
-        public string? Subject { get; set; }
-        public string? MessageBody { get; set; }
-        public string? CustomerName { get; set; }
-        public bool Error { get; set; } = false;    
+        public string Email { get; init; }
+        public string? Subject { get; init; }
+        public string? MessageBody { get; init; }
+        public string? CustomerName { get; init; }
+        public bool Error { get; init; } = false;    
     }
 }
