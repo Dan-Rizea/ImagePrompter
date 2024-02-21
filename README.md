@@ -12,7 +12,7 @@
 - [ ] Resize images through prompts.
 - [ ] Describe images through prompts.
 - [ ] Animate images through prompts.
-## Quick install
+## Quick install [Deprecated as of Deployment]
 All that's needed to setup this application locally is pasting and filling out these values in ImagePrompter's secret manager:
 ```
 {
